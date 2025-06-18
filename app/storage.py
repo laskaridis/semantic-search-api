@@ -1,6 +1,6 @@
 import logging
 import qdrant_client.models as qd
-from app.models import IndexRequest
+from app.models import IndexRequest, SearchResult
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from qdrant_client import QdrantClient
 from typing import List, Dict, Optional, Tuple, Any
@@ -125,7 +125,7 @@ async def vector_index(collection: str, item: IndexRequest) -> None:
     )
     logger.info(f"Indexed item with ID '{item.id}' into collection '{collection}'. Result: {result}")
 
-async def vector_search(collection: str, query: str, limit: int = 10) -> List[Dict[str, Any]]:
+async def vector_search(collection: str, query: str, limit: int = 10) -> List[SearchResult]:
     """
     Searches for the most relevant items based on the query.
 
@@ -153,11 +153,11 @@ async def vector_search(collection: str, query: str, limit: int = 10) -> List[Di
 
     results = await _rank(query, hits)
     return [
-        {
-            "id": hit.payload["external_id"],
-            "text": hit.payload["text"],
-            "score": float(score)
-        }
+        SearchResult(
+            id=hit.payload["external_id"],
+            text=hit.payload["text"],
+            score=float(score)
+        )
         for hit, score in results
     ]
 
