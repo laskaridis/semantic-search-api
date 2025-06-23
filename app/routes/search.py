@@ -8,4 +8,4 @@ router = APIRouter()
 @router.get("/search/{collection}")
 async def index(collection: str, q: str, limit: int = 10):
     logger.info(f"Search collection `{collection}` for `{q}`, limit: {limit}")
-    return await storage.vector_search(collection, q, limit)
+    return storage.vector_search(collection, q, limit)

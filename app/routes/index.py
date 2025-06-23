@@ -8,6 +8,6 @@ router = APIRouter()
 
 @router.post("/index/{collection}")
 async def index(collection: str, request: IndexRequest):
-    if not await vector_find(collection, request.id):
-        await vector_index(collection, request)
+    if not vector_find(collection, request.id):
+        vector_index(collection, request)
     return Response(status_code=201)

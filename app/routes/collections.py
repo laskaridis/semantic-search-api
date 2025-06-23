@@ -7,7 +7,7 @@ router = APIRouter()
 
 @router.post("/collections/{name}")
 async def create_collection(name: str):
-    if await storage.create_collection(name):
+    if storage.create_collection(name):
         return Response(status_code=201)
     else:
         logger.error(f"Collection '{name}' was not created.")
@@ -15,20 +15,20 @@ async def create_collection(name: str):
 
 @router.delete("/collections/{name}")
 async def delete_collection(name: str):
-    if await storage.delete_collection(name):
+    if storage.delete_collection(name):
         return Response(status_code=204)
     else:
         return Response(status_code=404)
 
 @router.get("/collections")
 async def list_collections():
-    collections = await storage.list_collections()
+    collections = storage.list_collections()
     return {"collections": collections}
 
 
 @router.get("/collections/{name}")
 async def show_collection(name: str):
-    collection = await storage.show_collection(name)
+    collection = storage.show_collection(name)
     if collection:
         return collection
     else:

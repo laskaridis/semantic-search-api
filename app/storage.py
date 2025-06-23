@@ -14,7 +14,7 @@ store = QdrantClient(":memory:")
 bi_encoder = SentenceTransformer('./models/bi-encoder')
 cross_encoder = CrossEncoder('./models/cross-encoder')
 
-async def show_collection(name: str) -> dict[str, Any] | None:
+def show_collection(name: str) -> dict[str, Any] | None:
     """
     Shows the details of a specific collection in the vector store.
 
@@ -33,7 +33,7 @@ async def show_collection(name: str) -> dict[str, Any] | None:
         logger.error(f"Collection '{name}' does not exist.")
         return None
 
-async def list_collections() -> list[str]:
+def list_collections() -> list[str]:
     """
     Lists all collections in the vector store.
 
@@ -46,7 +46,7 @@ async def list_collections() -> list[str]:
     collections = store.get_collections().collections
     return list(map(lambda collection: collection.name, collections))
 
-async def create_collection(name: str) -> bool:
+def create_collection(name: str) -> bool:
     """
     Creates a new collection in the vector store. If the collection already exists,
     it will not be created again.
@@ -66,7 +66,7 @@ async def create_collection(name: str) -> bool:
     else:
         return False
 
-async def delete_collection(name: str) -> bool:
+def delete_collection(name: str) -> bool:
     """
     Deletes a collection from the vector store.
 
@@ -79,7 +79,7 @@ async def delete_collection(name: str) -> bool:
     """
     return store.delete_collection(collection_name=name)
 
-async def vector_find(collection: str, id: str):
+def vector_find(collection: str, id: str):
     """
     Finds a single item in the vector store by its external ID.
 
@@ -99,7 +99,7 @@ async def vector_find(collection: str, id: str):
         limit=1
     )[0]
 
-async def vector_index(collection: str, item: IndexRequest) -> None:
+def vector_index(collection: str, item: IndexRequest) -> None:
     """
     Indexes a single item into the vector store.
 
@@ -125,7 +125,7 @@ async def vector_index(collection: str, item: IndexRequest) -> None:
     )
     logger.info(f"Indexed item with ID '{item.id}' into collection '{collection}'. Result: {result}")
 
-async def vector_search(collection: str, query: str, limit: int = 10) -> list[SearchResult]:
+def vector_search(collection: str, query: str, limit: int = 10) -> list[SearchResult]:
     """
     Searches for the most relevant items based on the query.
 
@@ -151,7 +151,7 @@ async def vector_search(collection: str, query: str, limit: int = 10) -> list[Se
     if not hits:
         return []
 
-    results = await _rank(query, hits)
+    results = _rank(query, hits)
     return [
         SearchResult(
             id=hit.payload["external_id"],
@@ -161,7 +161,7 @@ async def vector_search(collection: str, query: str, limit: int = 10) -> list[Se
         for hit, score in results
     ]
 
-async def _rank(query, hits) -> list[tuple[qd.PointStruct, float]]:
+def _rank(query, hits) -> list[tuple[qd.PointStruct, float]]:
     """
     Ranks the results using a cross-encoder.
 
