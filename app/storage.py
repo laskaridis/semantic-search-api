@@ -3,7 +3,7 @@ import qdrant_client.models as qd
 from app.models import IndexRequest, SearchResult
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from qdrant_client import QdrantClient
-from typing import List, Dict, Optional, Tuple, Any
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ store = QdrantClient(":memory:")
 bi_encoder = SentenceTransformer('./models/bi-encoder')
 cross_encoder = CrossEncoder('./models/cross-encoder')
 
-async def show_collection(name: str) -> Optional[Dict[str, Any]]:
+async def show_collection(name: str) -> dict[str, Any] | None:
     """
     Shows the details of a specific collection in the vector store.
 
@@ -33,7 +33,7 @@ async def show_collection(name: str) -> Optional[Dict[str, Any]]:
         logger.error(f"Collection '{name}' does not exist.")
         return None
 
-async def list_collections() -> List[str]:
+async def list_collections() -> list[str]:
     """
     Lists all collections in the vector store.
 
@@ -125,7 +125,7 @@ async def vector_index(collection: str, item: IndexRequest) -> None:
     )
     logger.info(f"Indexed item with ID '{item.id}' into collection '{collection}'. Result: {result}")
 
-async def vector_search(collection: str, query: str, limit: int = 10) -> List[SearchResult]:
+async def vector_search(collection: str, query: str, limit: int = 10) -> list[SearchResult]:
     """
     Searches for the most relevant items based on the query.
 
@@ -161,7 +161,7 @@ async def vector_search(collection: str, query: str, limit: int = 10) -> List[Se
         for hit, score in results
     ]
 
-async def _rank(query, hits) -> List[Tuple[qd.PointStruct, float]]:
+async def _rank(query, hits) -> list[tuple[qd.PointStruct, float]]:
     """
     Ranks the results using a cross-encoder.
 
