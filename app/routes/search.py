@@ -9,7 +9,9 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 class SearchParams(BaseModel):
-    """Querystring parameters for search queries."""
+    # disallow extra fields in query parameters
+    model_config = { "extra": "forbid" }
+
     q: str = Field(..., min_length=3, max_length=50, title="Search query")
     limit: int = Field(10, ge=1, le=100, title="Results limit")
 
