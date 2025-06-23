@@ -1,20 +1,25 @@
 import logging
-from app.models import SearchResult
 import app.storage as storage
-from fastapi import APIRouter, Query, HTTPException
-from typing import Annotated, Union
+from app.models import SearchResult
+from fastapi import APIRouter, Query, Path, HTTPException
+from typing import Annotated 
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+class SearchParams(BaseModel):
+    """Querystring parameters for search queries."""
+    q: str = Field(..., min_length=3, max_length=50, title="Search query")
+    limit: int = Field(10, ge=1, le=100, title="Results limit")
+
 @router.get("/search/{collection}")
 def search(
-    collection: str,
-    q: Annotated[str, Query(min_length=3, max_length=50)],
-    limit: Annotated[int, Query(ge=1, le=100)] = 10
+    collection: Annotated[str, Path(title="the collection name")],
+    search_query: Annotated[SearchParams, Query()],
 ) -> list[SearchResult]:
-    logger.info(f"Search collection `{collection}` for `{q}`, limit: {limit}")
+    logger.info(f"Search collection `{collection}` for `{search_query.q}`, limit: {search_query.limit}")
     try:
-        return storage.vector_search(collection, q, limit)
+        return storage.vector_search(collection, search_query.q, search_query.limit)
     except storage.CollectionNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
