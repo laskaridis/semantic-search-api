@@ -3,7 +3,6 @@ import qdrant_client.models as qd
 from app.models import IndexRequest, SearchResult
 from sentence_transformers import SentenceTransformer, CrossEncoder
 from qdrant_client import QdrantClient
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +13,19 @@ store = QdrantClient(":memory:")
 bi_encoder = SentenceTransformer('./models/bi-encoder')
 cross_encoder = CrossEncoder('./models/cross-encoder')
 
-def show_collection(name: str) -> dict[str, Any] | None:
+class CollectionNotFoundError(Exception):
+    """Exception raised when a collection is not found in the vector store."""
+    def __init__(self, collection_name: str):
+        super().__init__(f"collection '{collection_name}' not found.")
+        self.collection_name = collection_name
+
+class CollectionAlreadyExistsError(Exception):
+    """Exception raised when trying to create a collection that already exists."""
+    def __init__(self, collection_name: str):
+        super().__init__(f"collection '{collection_name}' already exists.")
+        self.collection_name = collection_name
+
+def show_collection(name: str) -> dict[str, any] | None:
     """
     Shows the details of a specific collection in the vector store.
 
@@ -64,7 +75,7 @@ def create_collection(name: str) -> bool:
             vectors_config=qd.VectorParams(size=vector_size, distance=distance_metric)
         )
     else:
-        return False
+        raise CollectionAlreadyExistsError(collection_name=name)
 
 def delete_collection(name: str) -> bool:
     """
@@ -125,7 +136,7 @@ def vector_index(collection: str, item: IndexRequest) -> None:
     )
     logger.info(f"Indexed item with ID '{item.id}' into collection '{collection}'. Result: {result}")
 
-def vector_search(collection: str, query: str, limit: int = 10) -> list[SearchResult]:
+def vector_search(collection: str, query: str, limit: int | None = 10) -> list[SearchResult]:
     """
     Searches for the most relevant items based on the query.
 
@@ -141,11 +152,16 @@ def vector_search(collection: str, query: str, limit: int = 10) -> list[SearchRe
             print(result["id"], result["text"], result["score"])
     """
     embedding = bi_encoder.encode([query], normalize_embeddings=True)[0]
-    hits = store.search(
-        collection_name=collection,
-        query_vector=embedding,
-        limit=limit
-    )
+    try:
+        hits = store.search(
+            collection_name=collection,
+            query_vector=embedding,
+            limit=limit
+        )
+    except Exception as e:
+        logger.error(e)
+        raise CollectionNotFoundError(collection)
+        
     logger.info(f"Found {len(hits)} hits for query '{query}' in collection '{collection}'.")
 
     if not hits:

@@ -1,11 +1,20 @@
 import logging
-import app.storage as storage 
-from fastapi import APIRouter
+from app.models import SearchResult
+import app.storage as storage
+from fastapi import APIRouter, Query, HTTPException
+from typing import Annotated, Union
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 @router.get("/search/{collection}")
-async def index(collection: str, q: str, limit: int = 10):
+def search(
+    collection: str,
+    q: Annotated[str, Query(min_length=3, max_length=50)],
+    limit: Annotated[int, Query(ge=1, le=100)] = 10
+) -> list[SearchResult]:
     logger.info(f"Search collection `{collection}` for `{q}`, limit: {limit}")
-    return storage.vector_search(collection, q, limit)
+    try:
+        return storage.vector_search(collection, q, limit)
+    except storage.CollectionNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
